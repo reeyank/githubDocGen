@@ -1,0 +1,39 @@
+# API Reference: `{{ file_path }}`
+
+{{ data.docstrings }}
+
+## Classes
+
+{% if data.classes %}
+{% for class_info in data.classes %}
+### `class {{ class_info.name }}`
+
+{{ class_info.docstring }}
+
+#### Methods
+
+{% if class_info.methods %}
+{% for method in class_info.methods %}
+- `{{ method.name }}`({{ method.args | join(", ") }})
+  {{ method.docstring }}
+{% endfor %}
+{% else %}
+- No methods found.
+{% endif %}
+
+{% endfor %}
+{% else %}
+- No classes found in this file.
+{% endif %}
+
+## Functions
+
+{% if data.functions %}
+{% for func_info in data.functions %}
+### `function {{ func_info.name }}`({{ func_info.args | join(", ") }})
+
+{{ func_info.docstring }}
+{% endfor %}
+{% else %}
+- No functions found in this file.
+{% endif %}

@@ -1,0 +1,5 @@
+# Installation
+
+Follow these steps to install and set up the project locally.
+
+More details will be added here based on repository analysis (e.g., `requirements.txt`, `package.json`).

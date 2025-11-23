@@ -1,0 +1,23 @@
+# Module: `{{ folder_path }}`
+
+This page outlines the contents of the `{{ folder_path }}` module/folder.
+
+## Files
+
+{% if data.files %}
+{% for file in data.files %}
+- `{{ file }}`
+{% endfor %}
+{% else %}
+- No files directly in this module.
+{% endif %}
+
+## Subdirectories
+
+{% if data.dirs %}
+{% for dir in data.dirs %}
+- `{{ dir }}`
+{% endfor %}
+{% else %}
+- No subdirectories in this module.
+{% endif %}
