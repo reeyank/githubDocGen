@@ -2,11 +2,23 @@
 
 {{ data.docstrings }}
 
+## API Endpoints in this File
+
+{% if data.api_endpoints %}
+{% for api_endpoint in data.api_endpoints %}
+### `{{ api_endpoint.method }} {{ api_endpoint.path }}`
+
+Handler: `{{ api_endpoint.name }}`
+{% endfor %}
+{% else %}
+- No API endpoints detected in this file.
+{% endif %}
+
 ## Classes
 
 {% if data.classes %}
 {% for class_info in data.classes %}
-### `class {{ class_info.name }}`
+### `class {{ class_info.name }}` {% if class_info.bases %}(inherits from: {{ class_info.bases | join(", ") }}){% endif %}
 
 {{ class_info.docstring }}
 
@@ -16,6 +28,12 @@
 {% for method in class_info.methods %}
 - `{{ method.name }}`({{ method.args | join(", ") }})
   {{ method.docstring }}
+  {% if method.calls %}
+  Calls: {{ method.calls | join(", ") }}
+  {% endif %}
+  {% if method.is_api_endpoint %}
+  (API Endpoint: {{ method.method }} {{ method.path }})
+  {% endif %}
 {% endfor %}
 {% else %}
 - No methods found.
@@ -33,6 +51,12 @@
 ### `function {{ func_info.name }}`({{ func_info.args | join(", ") }})
 
 {{ func_info.docstring }}
+{% if func_info.calls %}
+Calls: {{ func_info.calls | join(", ") }}
+{% endif %}
+{% if func_info.is_api_endpoint %}
+(API Endpoint: {{ func_info.method }} {{ func_info.path }})
+{% endif %}
 {% endfor %}
 {% else %}
 - No functions found in this file.

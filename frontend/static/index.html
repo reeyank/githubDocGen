@@ -1,0 +1,53 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>DocGen - Generate Documentation</title>
+    <link rel="stylesheet" href="/static/style.css">
+</head>
+<body>
+    <div class="container">
+        <h1>DocGen: GitHub Documentation Generator</h1>
+        <p>Enter a GitHub repository URL to generate a documentation website.</p>
+
+        <form id="docGenForm">
+            <div class="form-group">
+                <label for="repo_url">GitHub Repository URL:</label>
+                <input type="url" id="repo_url" name="repo_url" placeholder="e.g., https://github.com/encode/uvicorn" required>
+            </div>
+
+            <div class="form-group">
+                <label for="framework">Documentation Framework:</label>
+                <select id="framework" name="framework">
+                    <option value="mkdocs">MkDocs (Default)</option>
+                    <option value="mkdocs-material">MkDocs Material</option>
+                    <option value="sphinx">Sphinx (Basic)</option>
+                </select>
+            </div>
+
+            <div class="form-group">
+                <label for="output_folder_name">Output Folder Name (Optional):</label>
+                <input type="text" id="output_folder_name" name="output_folder_name" placeholder="e.g., my_project_docs">
+            </div>
+
+            <div class="form-group">
+                <label for="mongo_uri">MongoDB Atlas URI:</label>
+                <input type="text" id="mongo_uri" name="mongo_uri" placeholder="mongodb+srv://..." required>
+            </div>
+
+            <div class="form-group">
+                <label for="mongo_db_name">MongoDB Database Name:</label>
+                <input type="text" id="mongo_db_name" name="mongo_db_name" placeholder="e.g., doc_generator_db" required>
+            </div>
+
+            <button type="submit">Generate Documentation</button>
+        </form>
+
+        <div id="status" class="status-message"></div>
+        <pre id="output" class="output-box"></pre>
+    </div>
+
+    <script src="/static/script.js"></script>
+</body>
+</html>
