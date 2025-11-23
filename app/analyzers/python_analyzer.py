@@ -4,6 +4,21 @@ from rich.console import Console
 
 console = Console()
 
+class CallVisitor(ast.NodeVisitor):
+    def __init__(self):
+        self.calls = set()
+
+    def visit_Call(self, node):
+        if isinstance(node.func, ast.Name):
+            self.calls.add(node.func.id)
+        elif isinstance(node.func, ast.Attribute):
+            # e.g., obj.method() or module.function()
+            if isinstance(node.func.attr, str):
+                self.calls.add(node.func.attr)
+            elif isinstance(node.func.value, ast.Name):
+                self.calls.add(f"{node.func.value.id}.{node.func.attr}")
+        self.generic_visit(node)
+
 class PythonAnalyzer:
     def __init__(self, repo_path: Path):
         self.repo_path = repo_path
@@ -22,11 +37,16 @@ class PythonAnalyzer:
                 "classes": [],
                 "functions": [],
                 "imports": [],
-                "docstrings": ""
+                "docstrings": "",
+                "api_endpoints": []
             }
             try:
                 content = file_path.read_text(encoding="utf-8")
                 tree = ast.parse(content)
+                # Pre-process AST to add parent references
+                for node in ast.walk(tree):
+                    for child in ast.iter_child_nodes(node):
+                        child.parent = node
                 self._parse_ast(tree, str(relative_path))
             except SyntaxError as e:
                 console.log(f"[red]Syntax error in {relative_path}: {e}[/red]")
@@ -46,23 +66,32 @@ class PythonAnalyzer:
                 class_info = {
                     "name": node.name,
                     "methods": [],
+                    "bases": [base.id for base in node.bases if isinstance(base, ast.Name)],
                     "docstring": ast.get_docstring(node) or ""
                 }
                 for item in node.body:
                     if isinstance(item, ast.FunctionDef):
+                        call_visitor = CallVisitor()
+                        call_visitor.visit(item)
                         class_info["methods"].append({
                             "name": item.name,
                             "args": [arg.arg for arg in item.args.args],
-                            "docstring": ast.get_docstring(item) or ""
+                            "docstring": ast.get_docstring(item) or "",
+                            "calls": list(call_visitor.calls),
+                            "is_api_endpoint": self._is_api_endpoint(item)
                         })
                 current_module["classes"].append(class_info)
             elif isinstance(node, ast.FunctionDef):
                 # Only add top-level functions, not methods within classes
                 if not isinstance(getattr(node, 'parent', None), ast.ClassDef):
+                    call_visitor = CallVisitor()
+                    call_visitor.visit(node)
                     current_module["functions"].append({
                         "name": node.name,
                         "args": [arg.arg for arg in node.args.args],
-                        "docstring": ast.get_docstring(node) or ""
+                        "docstring": ast.get_docstring(node) or "",
+                        "calls": list(call_visitor.calls),
+                        "is_api_endpoint": self._is_api_endpoint(node)
                     })
             elif isinstance(node, (ast.Import, ast.ImportFrom)):
                 for alias in node.names:
@@ -72,12 +101,44 @@ class PythonAnalyzer:
                         module = node.module if node.module else '.'
                         current_module["imports"].append(f"{module}.{alias.name}")
 
-    # Helper to set parent for easy navigation (AST nodes don't have parents by default)
-    @staticmethod
-    def _add_parent_info(node):
-        for child in ast.iter_child_nodes(node):
-            child.parent = node
-            PythonAnalyzer._add_parent_info(child)
+            # Detect API Endpoints
+            if self._is_api_endpoint(node):
+                if isinstance(node, ast.FunctionDef) or isinstance(node, ast.AsyncFunctionDef):
+                    # Extract HTTP method and path from decorators if possible
+                    api_info = {"name": node.name, "method": "", "path": ""}
+                    for decorator in node.decorator_list:
+                        if isinstance(decorator, ast.Call) and isinstance(decorator.func, ast.Attribute):
+                            if decorator.func.value.id in ["app", "router", "bp"] and decorator.func.attr in ["get", "post", "put", "delete", "patch"]:
+                                api_info["method"] = decorator.func.attr.upper()
+                                if decorator.args and isinstance(decorator.args[0], ast.Constant):
+                                    api_info["path"] = decorator.args[0].value
+                                break
+                        elif isinstance(decorator, ast.Name) and decorator.id in ["api_view", "route"]:
+                            api_info["method"] = "ANY" # Generic for Django/Flask
+                            # Path extraction for Flask/Django would be more complex, often requires parsing decorator args
+                            
+                    current_module["api_endpoints"].append(api_info)
+
+    def _is_api_endpoint(self, node) -> bool:
+        # Detect FastAPI/Flask/Django API endpoints based on decorators
+        if not isinstance(node, (ast.FunctionDef, ast.AsyncFunctionDef, ast.ClassDef)):
+            return False
+        
+        for decorator in node.decorator_list:
+            if isinstance(decorator, ast.Call):
+                # FastAPI/Flask routes: @app.get('/'), @router.post('/'), @bp.route('/')
+                if isinstance(decorator.func, ast.Attribute):
+                    if decorator.func.attr in ["get", "post", "put", "delete", "patch", "route"]:
+                        if isinstance(decorator.func.value, ast.Name):
+                            # Simple check for common FastAPI/Flask app/router/blueprint names
+                            if decorator.func.value.id in ["app", "router", "bp"]:
+                                return True
+                # Django REST framework: @api_view(['GET'])
+                elif isinstance(decorator.func, ast.Name) and decorator.func.id == "api_view":
+                    return True
+            elif isinstance(decorator, ast.Name) and decorator.id == "app": # Simple case for @app decorators
+                return True
+        return False
 
 if __name__ == "__main__":
     # Example Usage

@@ -2,4 +2,22 @@
 
 This section provides an overview of how to get started with the project.
 
+{% if general_analysis.languages %}
+## Detected Languages
+
+This project primarily uses: {{ general_analysis.languages | join(", ") }}.
+{% endif %}
+
+{% if general_analysis.api_frameworks %}
+## API Frameworks
+
+This project utilizes the following API frameworks: {{ general_analysis.api_frameworks | join(", ") }}.
+{% endif %}
+
+{% if general_analysis.config_files %}
+## Configuration Files
+
+Key configuration files identified: {{ general_analysis.config_files | join(", ") }}.
+{% endif %}
+
 More details will be added here based on repository analysis.

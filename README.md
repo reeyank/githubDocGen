@@ -51,6 +51,16 @@ Or pass them as command-line arguments to the CLI tool.
 
 ## Usage
 
+### Web UI (Frontend)
+
+To use the web interface, start the FastAPI server:
+
+```bash
+uvicorn app.main:app --reload
+```
+
+Then, open your web browser and navigate to `http://127.0.0.1:8000`. You will see a form to enter the GitHub repository URL and other details.
+
 ### CLI Tool
 
 ```bash
@@ -88,3 +98,15 @@ Then, send a POST request to `/generate` with a JSON body:
   "mongo_db_name": "doc_generator_db"
 }
 ```
+
+## OpenAI Integration
+
+This application can use OpenAI's models for deeper code analysis and summary generation. To enable this, you need an OpenAI API key.
+
+You can set your OpenAI API key as an environment variable:
+
+```bash
+export OPENAI_API_KEY="your_openai_api_key_here"
+```
+
+Or pass it as a command-line argument to the CLI tool or in the web UI.
