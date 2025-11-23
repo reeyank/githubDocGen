@@ -10,6 +10,30 @@ This section describes the high-level architecture of the `{{ project_name }}` p
 - No languages detected.
 {% endif %}
 
+## API Frameworks
+
+{% if general_analysis.api_frameworks %}
+- {{ general_analysis.api_frameworks | join(", ") }}
+{% else %}
+- No API frameworks detected.
+{% endif %}
+
+## Package Managers
+
+{% if general_analysis.package_managers %}
+- {{ general_analysis.package_managers | join(", ") }}
+{% else %}
+- No package managers detected.
+{% endif %}
+
+## Config Files
+
+{% if general_analysis.config_files %}
+- {{ general_analysis.config_files | join(", ") }}
+{% else %}
+- No config files detected.
+{% endif %}
+
 ## Folder Structure
 
 ```mermaid
@@ -36,10 +60,12 @@ graph TD
 #### Classes
 {% if data.classes %}
 {% for class_info in data.classes %}
-- `{{ class_info.name }}`: {{ class_info.docstring | truncate(100) }}
+- `{{ class_info.name }}` {% if class_info.bases %}(inherits from: {{ class_info.bases | join(", ") }}){% endif %}: {{ class_info.docstring | truncate(100) }}
   - Methods:
   {% for method in class_info.methods %}
     - `{{ method.name }}`({{ method.args | join(", ") }}): {{ method.docstring | truncate(100) }}
+      {% if method.calls %}(Calls: {{ method.calls | join(", ") }}){% endif %}
+      {% if method.is_api_endpoint %}(API Endpoint: {{ method.method }} {{ method.path }}){% endif %}
   {% endfor %}
 {% endfor %}
 {% else %}
@@ -50,9 +76,20 @@ graph TD
 {% if data.functions %}
 {% for func_info in data.functions %}
 - `{{ func_info.name }}`({{ func_info.args | join(", ") }}): {{ func_info.docstring | truncate(100) }}
+  {% if func_info.calls %}(Calls: {{ func_info.calls | join(", ") }}){% endif %}
+  {% if func_info.is_api_endpoint %}(API Endpoint: {{ func_info.method }} {{ func_info.path }}){% endif %}
 {% endfor %}
 {% else %}
 - No functions found.
+{% endif %}
+
+#### API Endpoints
+{% if data.api_endpoints %}
+{% for api_endpoint in data.api_endpoints %}
+- `{{ api_endpoint.method }} {{ api_endpoint.path }}`: Handled by `{{ api_endpoint.name }}`
+{% endfor %}
+{% else %}
+- No API endpoints detected in this module.
 {% endif %}
 
 {% endfor %}

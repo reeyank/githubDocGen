@@ -2,4 +2,45 @@
 
 Follow these steps to install and set up the project locally.
 
-More details will be added here based on repository analysis (e.g., `requirements.txt`, `package.json`).
+{% if general_analysis.package_managers %}
+## Package Managers Detected
+
+- {{ general_analysis.package_managers | join(", ") }}
+
+{% if "pip" in general_analysis.package_managers or "setuptools" in general_analysis.package_managers or "poetry/pip" in general_analysis.package_managers %}
+### Python Dependencies (e.g., `requirements.txt`)
+
+If a `requirements.txt` file is present, you can install Python dependencies using pip:
+
+```bash
+pip install -r requirements.txt
+```
+{% endif %}
+
+{% if "npm/yarn" in general_analysis.package_managers %}
+### Node.js Dependencies (e.g., `package.json`)
+
+If a `package.json` file is present, you can install Node.js dependencies using npm or yarn:
+
+```bash
+npm install
+# or
+yarn install
+```
+{% endif %}
+
+{% if "cargo" in general_analysis.package_managers %}
+### Rust Dependencies (e.g., `Cargo.toml`)
+
+If a `Cargo.toml` file is present, you can build/run Rust projects using Cargo:
+
+```bash
+cargo build
+# or
+cargo run
+```
+{% endif %}
+
+{% else %}
+No specific package managers were detected. You may need to refer to the project's source code for manual installation instructions.
+{% endif %}

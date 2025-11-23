@@ -2,6 +2,7 @@ from pathlib import Path
 from pydantic import BaseModel, Field
 from rich.console import Console
 from fastapi import HTTPException
+from sentence_transformers import SentenceTransformer
 
 from app.services.repo_fetcher import RepoFetcher
 from app.services.structure_builder import StructureBuilder
@@ -34,6 +35,9 @@ async def generate_documentation(request: GenerateRequest, output_base_dir: Path
 
     output_project_dir = output_base_dir / project_name
     output_docs_site_dir = output_project_dir / "docs_site"
+
+    # Initialize the embedding model globally
+    embedding_model = SentenceTransformer('all-MiniLM-L6-v2')
 
     console.log(f"[bold magenta]Starting documentation generation for {repo_url} with {framework} framework.[/bold magenta]")
 
@@ -77,8 +81,13 @@ async def generate_documentation(request: GenerateRequest, output_base_dir: Path
             "python": python_analysis,
             "js": js_analysis,
         }
-        analysis_collection.insert_one({"repo_url": repo_url, "analysis_data": full_analysis_results})
-        console.log("[green]Analysis results saved to MongoDB Atlas.[/green]")
+
+        # Generate embedding for the full analysis results
+        analysis_text = str(full_analysis_results) # Convert dict to string for embedding
+        embedding = embedding_model.encode(analysis_text).tolist()
+
+        analysis_collection.insert_one({"repo_url": repo_url, "analysis_data": full_analysis_results, "embedding": embedding})
+        console.log("[green]Analysis results and embeddings saved to MongoDB Atlas.[/green]")
 
     # 3. Generate documentation files and build website
     structure_builder = StructureBuilder(output_project_dir.parent)

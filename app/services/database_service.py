@@ -74,6 +74,52 @@ class MongoDBService:
             return result.deleted_count
         return None
 
+    def create_vector_index(self, collection_name: str, index_name: str, embedding_field: str, dimensions: int, metric: str = "cosine"):
+        console.log(f"[yellow]Placeholder: To create a vector index '{index_name}' on collection '{collection_name}', field '{embedding_field}', with {dimensions} dimensions and metric '{metric}'. This should be done directly in MongoDB Atlas or via the Atlas API.[/yellow]")
+        # In a real application, you would use MongoDB Atlas API to create the index programmatically.
+        # Example of how to define an index (not executable code):
+        # {
+        #     "fields": [
+        #         {
+        #             "numDimensions": dimensions,
+        #             "path": embedding_field,
+        #             "similarity": metric,
+        #             "type": "vector"
+        #         }
+        #     ]
+        # }
+
+    def vector_search(self, collection_name: str, query_vector: list[float], index_name: str, limit: int = 10):
+        collection = self.get_collection(collection_name)
+        if collection is None:
+            return []
+
+        try:
+            pipeline = [
+                {
+                    "$vectorSearch": {
+                        "index": index_name,
+                        "path": "embedding",  # Assuming the embedding field is named 'embedding'
+                        "queryVector": query_vector,
+                        "numCandidates": limit * 10,  # Search more candidates for better recall
+                        "limit": limit
+                    }
+                },
+                {
+                    "$project": {
+                        "_id": 0,  # Exclude the _id field
+                        "embedding": 0, # Exclude the embedding field from results
+                        "score": { "$meta": "vectorSearchScore" }
+                    }
+                }
+            ]
+            results = list(collection.aggregate(pipeline))
+            console.log(f"[green]Performed vector search on '{collection_name}' with index '{index_name}'. Found {len(results)} results.[/green]")
+            return results
+        except Exception as e:
+            console.log(f"[red]Error during vector search: {e}[/red]")
+            return []
+
 if __name__ == "__main__":
     # Example Usage (replace with your actual MongoDB Atlas URI and database name)
     # It's recommended to use environment variables for connection strings in a real application

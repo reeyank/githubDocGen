@@ -1,0 +1,30 @@
+site_name: hall-of-us-docs Documentation
+site_description: Documentation for the hall-of-us-docs project.
+repo_url: https://github.com/reeyank/hall-of-us
+theme:
+  name: material
+nav:
+
+
+  - Home: index.md
+
+
+
+  - Getting Started: getting-started.md
+
+
+
+  - Installation: installation.md
+
+
+
+  - Architecture: architecture.md
+
+
+
+  - API Reference: api/index.md
+
+
+
+  - Modules: modules/index.md
+

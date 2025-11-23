@@ -53,13 +53,17 @@ class MkDocsGenerator:
 
     def _create_getting_started_md(self):
         template = self.env.get_template("getting-started.md.j2")
-        content = template.render()
+        content = template.render({
+            "general_analysis": self.analysis_results.get("general", {})
+        })
         (self.docs_dir / "getting-started.md").write_text(content)
         console.log("[green]getting-started.md created.[/green]")
 
     def _create_installation_md(self):
         template = self.env.get_template("installation.md.j2")
-        content = template.render()
+        content = template.render({
+            "general_analysis": self.analysis_results.get("general", {})
+        })
         (self.docs_dir / "installation.md").write_text(content)
         console.log("[green]installation.md created.[/green]")
 
